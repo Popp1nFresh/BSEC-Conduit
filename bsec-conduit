@@ -157,11 +157,11 @@ def publish(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
 def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     urlEndpoint = config['INFLUXDB'].getboolean(['influx_host']) + "/write?db=" + config['INFLUXDB'].getboolean(['influx_db_name'])
     dataToSend = 'bme680,location=unknown,iaq_accuracy={0:d} iaq={1:.2f}i,iaq_accuracy={2:d}i,temperature={3:.2f},pressure={4:.2f},humidity={5:.2f},gas={6:d}i'.format(iaq_accuracy, iaq, iaq_accuracy, temperature, humidity, pressure, gas)
-    log.INFO(dataToSend)
-    log.INFO("REQUEST ENDPOINT: " + urlEndpoint)
+    log.info(dataToSend)
+    log.info("REQUEST ENDPOINT: " + urlEndpoint)
     r = requests.post(url = urlEndpoint, data = dataToSend)
-    log.INFO("RESPONSE OUTPUT: " + r.text)
-    log.INFO("RESPONSE STATUS CODE: " + r.status_code)
+    log.info("RESPONSE OUTPUT: " + r.text)
+    log.info("RESPONSE STATUS CODE: " + r.status_code)
 
 def publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     # Publish data to MQTT.
@@ -326,7 +326,7 @@ def set_procname(proc_name):
 if __name__ == "__main__":
     ## Logging Setup
     # Create logger, add Systemd Journal Handler set log level.
-    log_level = logging.INFO
+    log_level = logging.info
     log = logging.getLogger(__program__)
     log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__program__))
     log.setLevel(log_level)
@@ -373,7 +373,7 @@ if __name__ == "__main__":
     general_iaq_as_percent = config['General'].getboolean('iaq_as_percent')
 
     if config['MQTT'].getboolean(['use_mqtt']) == False:
-        log.INFO("skipping MQTT setup")
+        log.info("skipping MQTT setup")
     else:
         # MQTT User
         mqtt_user = config['MQTT']['user']
@@ -474,7 +474,7 @@ if __name__ == "__main__":
         # Sleep for a second to allow the MQTT connection to establish. (Maybe not needed?)
         time.sleep(1)
     else:
-        log.INFO("skipping mqtt setup")
+        log.info("skipping mqtt setup")
 
     # Start the main loop!
     exit(main())
