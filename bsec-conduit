@@ -161,7 +161,7 @@ def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     log.debug("REQUEST ENDPOINT: " + urlEndpoint)
     r = requests.post(url = urlEndpoint, data = dataToSend)
     log.debug("RESPONSE OUTPUT: " + r.text)
-    log.debug("RESPONSE STATUS CODE: " + r.status_code)
+    log.debug("RESPONSE STATUS CODE: " + str(r.status_code))
 
 def publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     # Publish data to MQTT.
