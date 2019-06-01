@@ -149,7 +149,7 @@ def main():
     return(0)
 
 def publish(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
-    if config['MQTT'].getboolean(['use_mqtt']):
+    if config['MQTT'].getboolean('use_mqtt'):
         publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
     if config['INFLUXDB'].getboolean(['use_influx']):
         publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
@@ -260,7 +260,7 @@ def exit_handler(signum, frame):
     bsec_lib.close()
 
     # Set MQTT status to offline.
-    if config['MQTT'].getboolean(['use_mqtt']):
+    if config['MQTT'].getboolean('use_mqtt'):
         mqttc.publish('{}/status'.format(mqtt_topic), payload='offline', retain=True)
         # Disconnect from MQTT.
         mqttc.disconnect()
@@ -372,7 +372,7 @@ if __name__ == "__main__":
     # IAQ as Percent
     general_iaq_as_percent = config['General'].getboolean('iaq_as_percent')
 
-    if config['MQTT'].getboolean(['use_mqtt']) == False:
+    if config['MQTT'].getboolean('use_mqtt') == False:
         log.info("skipping MQTT setup")
     else:
         # MQTT User
@@ -457,7 +457,7 @@ if __name__ == "__main__":
 
 
     ## MQTT Setup
-    if config['MQTT'].getboolean(['use_mqtt']):
+    if config['MQTT'].getboolean('use_mqtt'):
         # MQTT Client Object.
         mqttc = mqtt.Client(client_id = mqtt_client_id)
         # Register callback handlers, enable logging and set the reconnect delay,
