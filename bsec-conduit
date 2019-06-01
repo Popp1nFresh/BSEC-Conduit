@@ -140,7 +140,7 @@ def main():
                 log.debug("IAQ Accuracy: {} | IAQ: {} | Temperature: {} | Humidity: {} | Pressure: {} | Gas: {}".format(
                 IAQ_Accuracy, IAQ, Temperature, Humidity, Pressure, Gas))
 
-            publish(IAQ, IAQ_Accuracy, Temperature, Humidity, Pressure, Gas)
+            publish(IAQ, int(mean(cache_IAQ_Accuracy)), Temperature, Humidity, Pressure, Gas)
 
     ## End of Main Loop ##
 
@@ -151,11 +151,11 @@ def main():
 def publish(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     if config['MQTT'].getboolean('use_mqtt'):
         publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
-    if config['INFLUXDB'].getboolean(['use_influx']):
+    if config['INFLUXDB'].getboolean('use_influx'):
         publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
 
 def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
-    urlEndpoint = config['INFLUXDB'].getboolean(['influx_host']) + "/write?db=" + config['INFLUXDB'].getboolean(['influx_db_name'])
+    urlEndpoint = config['INFLUXDB'].['influx_host'] + "/write?db=" + config['INFLUXDB'].['influx_db_name']
     dataToSend = 'bme680,location=unknown,iaq_accuracy={0:d} iaq={1:.2f}i,iaq_accuracy={2:d}i,temperature={3:.2f},pressure={4:.2f},humidity={5:.2f},gas={6:d}i'.format(iaq_accuracy, iaq, iaq_accuracy, temperature, humidity, pressure, gas)
     log.debug(dataToSend)
     log.debug("REQUEST ENDPOINT: " + urlEndpoint)
