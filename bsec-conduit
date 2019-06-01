@@ -158,7 +158,7 @@ def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     accuracy_code = {0: 'Stabilizing', 1: 'Low', 2: 'Medium', 3: 'High'}
     iaq_accuracy_tag = accuracy_code.get(int(iaq_accuracy), 'Unknown')
     urlEndpoint = config['INFLUXDB']['influx_host'] + "/write?db=" + config['INFLUXDB']['influx_db_name']
-    dataToSend = 'bme680,location=unknown,iaq_accuracy="{}" iaq={:.2f},iaq_accuracy={:d},temperature={:.2f},pressure={:.2f},humidity={:.2f},gas={:d}i'.format(iaq_accuracy_tag, iaq, iaq_accuracy, temperature, humidity, pressure, gas)
+    dataToSend = 'bme680,location=unknown,iaq_accuracy="{}" iaq={:.2f},iaq_accuracy={:d},temperature={:.2f},pressure={:.2f},humidity={:.2f},gas={:d}i'.format(iaq_accuracy_tag, iaq, iaq_accuracy, temperature, pressure, humidity, gas)
     log.debug(dataToSend)
     log.debug("REQUEST ENDPOINT: " + urlEndpoint)
     r = requests.post(url = urlEndpoint, data = dataToSend)
