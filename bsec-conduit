@@ -108,7 +108,7 @@ def main():
         count += 1
 
         # Debug: Timing information.
-        if log_level == logging.DEBUG:
+        if log_level == logging.INFO:
             log.debug("Reading #{} took {}s.".format(count, round(time.time() - timestamp, 3)))
             timestamp = time.time()
 
