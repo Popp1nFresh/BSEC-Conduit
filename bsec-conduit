@@ -326,7 +326,7 @@ def set_procname(proc_name):
 if __name__ == "__main__":
     ## Logging Setup
     # Create logger, add Systemd Journal Handler set log level.
-    log_level = logging.info
+    log_level = logging.INFO
     log = logging.getLogger(__program__)
     log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__program__))
     log.setLevel(log_level)
