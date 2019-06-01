@@ -28,6 +28,7 @@ import time
 import json
 import logging
 import configparser
+import requests
 from shutil import copy
 from statistics import mean
 from collections import deque
@@ -67,6 +68,12 @@ def main():
     cache_Humidity  = deque(maxlen=cache_size)
     cache_Pressure = deque(maxlen=cache_size)
     cache_Gas = deque(maxlen=cache_size)
+    # cache_pm1 = 
+    # cache_pm1atm
+    # cache_pm25 = 
+    # cache_pm25atm =
+    # cache_pm10 = 
+    # cache_pm10atm =
 
     # Set Initial Timestamp (if we're in debug mode.)
     if log_level == logging.DEBUG: timestamp = time.time()
@@ -133,19 +140,37 @@ def main():
                 log.debug("IAQ Accuracy: {} | IAQ: {} | Temperature: {} | Humidity: {} | Pressure: {} | Gas: {}".format(
                 IAQ_Accuracy, IAQ, Temperature, Humidity, Pressure, Gas))
 
-            # Publish data to MQTT.
-            mqttc.publish('{}/iaq_accuracy'.format(mqtt_topic), payload=IAQ_Accuracy, retain=True)
-            mqttc.publish('{}/iaq'.format(mqtt_topic), payload=IAQ, retain=True)
-            mqttc.publish('{}/temperature'.format(mqtt_topic), payload=Temperature, retain=True)
-            mqttc.publish('{}/humidity'.format(mqtt_topic), payload=Humidity, retain=True)
-            mqttc.publish('{}/pressure'.format(mqtt_topic), payload=Pressure, retain=True)
-            mqttc.publish('{}/gas'.format(mqtt_topic), payload=Gas, retain=True)
+            publish()
 
     ## End of Main Loop ##
 
     # If we've broken out of the 'for loop' it's because something went very wrong.
     log.error("BSEC-Library encountered an unhandled exception. Terminating.")
     return(0)
+
+def publish(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
+    if config['MQTT'].getboolean(['use_mqtt']):
+        publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
+    if config['INFLUXDB'].getboolean(['use_influx']):
+        publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas)
+
+def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
+    urlEndpoint = config['INFLUXDB'].getboolean(['influx_host']) + "/write?db=" + config['INFLUXDB'].getboolean(['influx_db_name'])
+    dataToSend = 'bme680,location=unknown,iaq_accuracy={0:d} iaq={1:.2f}i,iaq_accuracy={2:d}i,temperature={3:.2f},pressure={4:.2f},humidity={5:.2f},gas={6:d}i'.format(iaq_accuracy, iaq, iaq_accuracy, temperature, humidity, pressure, gas)
+    log.INFO(dataToSend)
+    log.INFO("REQUEST ENDPOINT: " + urlEndpoint)
+    r = requests.post(url = urlEndpoint, data = dataToSend)
+    log.INFO("RESPONSE OUTPUT: " + r.text)
+    log.INFO("RESPONSE STATUS CODE: " + r.status_code)
+
+def publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
+    # Publish data to MQTT.
+    mqttc.publish('{}/iaq_accuracy'.format(mqtt_topic), payload=iaq_accuracy, retain=True)
+    mqttc.publish('{}/iaq'.format(mqtt_topic), payload=iaq, retain=True)
+    mqttc.publish('{}/temperature'.format(mqtt_topic), payload=temperature, retain=True)
+    mqttc.publish('{}/humidity'.format(mqtt_topic), payload=humidity, retain=True)
+    mqttc.publish('{}/pressure'.format(mqtt_topic), payload=pressure, retain=True)
+    mqttc.publish('{}/gas'.format(mqtt_topic), payload=gas, retain=True)
 
 ### MQTT Functions
 ## Defines "Home Assistant Discovery" publisher function.
@@ -230,19 +255,23 @@ def exit_handler(signum, frame):
         exit_code = 0
     else:
         exit_code = signum + 128
+
     # Terminate the BSEC-Library process if it's running.
     bsec_lib.close()
+
     # Set MQTT status to offline.
-    mqttc.publish('{}/status'.format(mqtt_topic), payload='offline', retain=True)
-    # Disconnect from MQTT.
-    mqttc.disconnect()
-    # Wait for 1 second to allow the mqtt_on_disconnect handler to catch up.
-    time.sleep(1)
+    if config['MQTT'].getboolean(['use_mqtt']):
+        mqttc.publish('{}/status'.format(mqtt_topic), payload='offline', retain=True)
+        # Disconnect from MQTT.
+        mqttc.disconnect()
+        # Wait for 1 second to allow the mqtt_on_disconnect handler to catch up.
+        time.sleep(1)
+
     # Exit with status code.
     exit(exit_code)
 
 # Returns a unique 8 character hex string.
-def get_serial():
+def get_serial_number():
     serial = None
     # First attempt to get a serial from the device tree.
     try:
@@ -307,7 +336,7 @@ if __name__ == "__main__":
     # Set a friendly name for the process.
     set_procname(__program__.lower())
     # Get the RPi serial number for use as a unique hardware ID.
-    system_id = get_serial()
+    system_id = get_serial_number()
     # Get hostname.
     hostname = get_hostname()
     # Get sensor type.
@@ -343,38 +372,41 @@ if __name__ == "__main__":
     # IAQ as Percent
     general_iaq_as_percent = config['General'].getboolean('iaq_as_percent')
 
-    # MQTT User
-    mqtt_user = config['MQTT']['user']
-    if mqtt_user == '':
-        mqtt_user = None
+    if config['MQTT'].getboolean(['use_mqtt']) == False:
+        log.INFO("skipping MQTT setup")
+    else:
+        # MQTT User
+        mqtt_user = config['MQTT']['user']
+        if mqtt_user == '':
+            mqtt_user = None
 
-    # MQTT Password
-    mqtt_pass = config['MQTT']['pass']
-    if mqtt_pass == '':
-        mqtt_pass = None
+        # MQTT Password
+        mqtt_pass = config['MQTT']['pass']
+        if mqtt_pass == '':
+            mqtt_pass = None
 
-    # MQTT Client ID
-    mqtt_client_id = config['MQTT']['client_id']
-    if mqtt_client_id == '':
-        # Generate a client id.
-        if system_id is not None:
-            mqtt_client_id = '{}-{}'.format(sensor_type, system_id)
-            log.info("Generated MQTT Client ID: {}".format(mqtt_client_id))
-        else:
-            mqtt_client_id = None
+        # MQTT Client ID
+        mqtt_client_id = config['MQTT']['client_id']
+        if mqtt_client_id == '':
+            # Generate a client id.
+            if system_id is not None:
+                mqtt_client_id = '{}-{}'.format(sensor_type, system_id)
+                log.info("Generated MQTT Client ID: {}".format(mqtt_client_id))
+            else:
+                mqtt_client_id = None
 
-    # MQTT Broker IP or Host
-    mqtt_host = config['MQTT'].get('host', '127.0.0.1')
+        # MQTT Broker IP or Host
+        mqtt_host = config['MQTT'].get('host', '127.0.0.1')
 
-    # MQTT Broker Port
-    mqtt_port = int(config['MQTT'].get('port', '1883'))
+        # MQTT Broker Port
+        mqtt_port = int(config['MQTT'].get('port', '1883'))
 
-    # MQTT Topic
-    mqtt_topic = config['MQTT']['topic']
-    if mqtt_topic == '':
-        # Generate a base topic if not set by the user.
-        mqtt_topic = '{}/{}'.format(hostname, sensor_type)
-        log.info("Generated MQTT Base Topic: {}".format(mqtt_topic))
+        # MQTT Topic
+        mqtt_topic = config['MQTT']['topic']
+        if mqtt_topic == '':
+            # Generate a base topic if not set by the user.
+            mqtt_topic = '{}/{}'.format(hostname, sensor_type)
+            log.info("Generated MQTT Base Topic: {}".format(mqtt_topic))
 
     # HA Discovery Enabled
     discovery_enabled = config['Discovery'].getboolean('enabled')
@@ -423,22 +455,26 @@ if __name__ == "__main__":
         if log_level == logging.DEBUG: log.debug("Watchdog timer enabled. Petting the dog every {} seconds.".format(watchdog_timeout))
     else: watchdog_enabled = False
 
+
     ## MQTT Setup
-    # MQTT Client Object.
-    mqttc = mqtt.Client(client_id = mqtt_client_id)
-    # Register callback handlers, enable logging and set the reconnect delay,
-    # authentication parameters and last will.
-    mqttc.on_connect = mqtt_on_connect
-    mqttc.on_disconnect = mqtt_on_disconnect
-    mqttc.enable_logger(logger=log)
-    mqttc.reconnect_delay_set(min_delay=1, max_delay=120)
-    if mqtt_user is not None and mqtt_pass is not None: mqttc.username_pw_set(mqtt_user, mqtt_pass)
-    mqttc.will_set('{}/status'.format(mqtt_topic), payload='offline', retain=True)
-    # Launch the async connection handler and start the MQTT background loop.
-    mqttc.connect_async(mqtt_host, mqtt_port, keepalive=60)
-    mqttc.loop_start()
-    # Sleep for a second to allow the MQTT connection to establish. (Maybe not needed?)
-    time.sleep(1)
+    if config['MQTT'].getboolean(['use_mqtt']):
+        # MQTT Client Object.
+        mqttc = mqtt.Client(client_id = mqtt_client_id)
+        # Register callback handlers, enable logging and set the reconnect delay,
+        # authentication parameters and last will.
+        mqttc.on_connect = mqtt_on_connect
+        mqttc.on_disconnect = mqtt_on_disconnect
+        mqttc.enable_logger(logger=log)
+        mqttc.reconnect_delay_set(min_delay=1, max_delay=120)
+        if mqtt_user is not None and mqtt_pass is not None: mqttc.username_pw_set(mqtt_user, mqtt_pass)
+        mqttc.will_set('{}/status'.format(mqtt_topic), payload='offline', retain=True)
+        # Launch the async connection handler and start the MQTT background loop.
+        mqttc.connect_async(mqtt_host, mqtt_port, keepalive=60)
+        mqttc.loop_start()
+        # Sleep for a second to allow the MQTT connection to establish. (Maybe not needed?)
+        time.sleep(1)
+    else:
+        log.INFO("skipping mqtt setup")
 
     # Start the main loop!
     exit(main())
