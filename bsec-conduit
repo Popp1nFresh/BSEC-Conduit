@@ -92,7 +92,7 @@ def main():
         if watchdog_enabled:
             watchdog_current = round(time.time() - watchdog_last, 1)
             if watchdog_current >= watchdog_timeout:
-                if log_level == logging.DEBUG: log.debug("<Pets the Dog>")
+                # if log_level == logging.DEBUG: log.debug("<Pets the Dog>")
                 daemon.notify("WATCHDOG=1")
                 watchdog_last = time.time()
 
