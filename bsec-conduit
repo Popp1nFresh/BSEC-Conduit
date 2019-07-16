@@ -160,10 +160,10 @@ def publishInflux(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     urlEndpoint = config['INFLUXDB']['influx_host'] + "/write?db=" + config['INFLUXDB']['influx_db_name']
     dataToSend = 'bme680,location=unknown,iaq_accuracy="{}" iaq={:.2f},iaq_accuracy={:d},temperature={:.2f},pressure={:.2f},humidity={:.2f},gas={:d}i'.format(iaq_accuracy_tag, iaq, iaq_accuracy, temperature, pressure, humidity, gas)
     log.debug(dataToSend)
-    log.debug("REQUEST ENDPOINT: " + urlEndpoint)
+    # log.debug("REQUEST ENDPOINT: " + urlEndpoint)
     r = requests.post(url = urlEndpoint, data = dataToSend)
-    log.debug("RESPONSE OUTPUT: " + r.text)
-    log.debug("RESPONSE STATUS CODE: " + str(r.status_code))
+    # log.debug("RESPONSE OUTPUT: " + r.text)
+    # log.debug("RESPONSE STATUS CODE: " + str(r.status_code))
 
 def publishMQTT(iaq, iaq_accuracy, temperature, humidity, pressure, gas):
     # Publish data to MQTT.
@@ -455,7 +455,7 @@ if __name__ == "__main__":
         watchdog_usec = int(watchdog_usec)
         watchdog_enabled = True
         watchdog_timeout = (watchdog_usec / 1000000) / 2 # Set our timeout as half the watchdog value.
-        if log_level == logging.DEBUG: log.debug("Watchdog timer enabled. Petting the dog every {} seconds.".format(watchdog_timeout))
+        # if log_level == logging.DEBUG: log.debug("Watchdog timer enabled. Petting the dog every {} seconds.".format(watchdog_timeout))
     else: watchdog_enabled = False
 
 
