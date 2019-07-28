@@ -239,13 +239,14 @@ class BSECLibrary:
                             '{}/API/bme680.c'.format(src_dir),
                             '{}/examples/bsec_integration.c'.format(src_dir),
                             '{}/bsec-library.c'.format(src_dir),
-                            '-L{}/algo/normal_version/bin/{}'.format(src_dir, lib_arch),
+                            '-L{}/algo/lite_version/bin/{}'.format(src_dir, lib_arch),
                             '-lalgobsec',
                             '-lm',
                             '-lrt',
                             '-o',
                             exec_dst
                             ]
+            self.log.warning(build_command)
             # Run the build process.
             build_process = subprocess.run(build_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
