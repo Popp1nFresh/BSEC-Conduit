@@ -18,7 +18,7 @@ install_uid = os.stat(install_dir).st_uid
 install_gid = os.stat(install_dir).st_gid
 install_username = pwd.getpwuid(install_uid).pw_name
 bsec_url = 'https://ae-bst.resource.bosch.com/media/_tech/media/bsec'
-bsec_ver = 'BSEC_1.4.7.3_Generic_Release_20190410'
+bsec_ver = 'BSEC_1.4.7.4_Generic_Release' #https://ae-bst.resource.bosch.com/media/_tech/media/bsec/BSEC_1.4.7.4_Generic_Release.zip
 bsec_zip = '{}/{}.zip'.format(install_dir, bsec_ver)
 bsec_dir = '{}/{}'.format(install_dir, bsec_ver)
 systemd_dir = "/etc/systemd/system"
@@ -185,7 +185,7 @@ if os.path.isdir(systemd_dir):
 else:
     print("- This system does not appear to be running Systemd, skipping.")
 
-time.sleep(1)
+time.sleep(2)
 print("\n# I2C Access")
 if os.path.isfile('/boot/config.txt'):
     print("> Checking for I2C-1 device tree entry......", end='\r')
