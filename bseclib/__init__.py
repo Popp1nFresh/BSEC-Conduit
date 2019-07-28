@@ -239,7 +239,7 @@ class BSECLibrary:
                             '{}/API/bme680.c'.format(src_dir),
                             '{}/examples/bsec_integration.c'.format(src_dir),
                             '{}/bsec-library.c'.format(src_dir),
-                            '-L{}/algo/bin/{}'.format(src_dir, lib_arch),
+                            '-L{}/algo/normal_version/bin/{}'.format(src_dir, lib_arch),
                             '-lalgobsec',
                             '-lm',
                             '-lrt',
